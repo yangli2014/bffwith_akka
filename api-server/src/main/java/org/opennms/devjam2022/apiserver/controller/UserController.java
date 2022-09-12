@@ -18,7 +18,7 @@ public class UserController {
     IUserService userService;
 
     @GetMapping("/users")
-    List<UserWithRoles> all() {
+    public List<UserWithRoles> all() {
         return userService.getUsers();
     }
 
