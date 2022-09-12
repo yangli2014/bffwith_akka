@@ -44,5 +44,9 @@
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-http_${scala.version}</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-http-jackson_2.13</artifactId>
+        </dependency>
     </dependencies>
 </project>
