@@ -16,3 +16,8 @@ This is a demo project for DevJam 2022 to evaluate the Akka HTTP technology.
 - Optional
   - Compare to another BFF technology: Spring boot web with Apache HTTP client or Spring web client.
   - Can support GraphQl?
+
+## References
+
+- [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html)
+- [Backends For Frontends](https://samnewman.io/patterns/architectural/bff/)
