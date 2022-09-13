@@ -34,19 +34,12 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.TimeUnit;
 
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.http.javadsl.Http;
 import akka.http.javadsl.ServerBinding;
-import akka.http.javadsl.model.ContentType;
-import akka.http.javadsl.model.ContentTypes;
-import akka.http.javadsl.model.HttpEntities;
 import akka.http.javadsl.model.HttpEntity;
-import akka.http.javadsl.model.HttpResponse;
-import akka.http.javadsl.model.MediaType;
-import akka.http.javadsl.model.MediaTypes;
 import akka.http.javadsl.model.StatusCodes;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
@@ -59,10 +52,10 @@ public class BFFApplication extends AllDirectives {
 
     BFFApplication app = new BFFApplication();
 
-    final CompletionStage<ServerBinding> binding = http.newServerAt("localhost", 8080)
+    final CompletionStage<ServerBinding> binding = http.newServerAt("localhost", 8081)
         .bind(app.createRoute());
 
-    System.out.println("Server online at http://localhost:8080/\nPress RETURN to stop...");
+    System.out.println("Server online at http://localhost:8081/\nPress RETURN to stop...");
     System.in.read();
 
     binding.thenCompose(ServerBinding::unbind)
@@ -104,7 +97,15 @@ public class BFFApplication extends AllDirectives {
             path("users", () -> extractRequestEntity(entity -> {
               final HttpEntity.Strict strict = (HttpEntity.Strict) entity;
               System.out.println(strict.getData().utf8String());
-              return complete(StatusCodes.OK, "{\"data\": \"data saved\"}");
+              return complete(StatusCodes.OK, "{\"data\": \"user saved\"}");
+            }))),
+        delete(() -> pathPrefix("users", () ->
+            path(longSegment(), (Long id) -> {
+              if(id<10) {
+                return complete(StatusCodes.NO_CONTENT);
+              } else {
+                return complete(StatusCodes.NOT_FOUND, "{\"error\": \"Not Found\"}");
+              }
             })))
     );
   }
