@@ -79,6 +79,16 @@ public class InMemoryUserService implements IUserService {
     }
 
     @Override
+    public UserWithRoles getUserByID(String id) {
+        UserWithRoles user = USERS.stream().filter(u -> u.getIdentity().equals(id)).findFirst().orElse(null);
+        if(user != null) {
+            user.setRoles(getRoles(id));
+        }
+        return user;
+    }
+
+
+    @Override
     public List<UserRole> getRoles(String userIdentity) {
         List<UserRole> result = (List<UserRole>) USER_ROLES.get(userIdentity);
         return result == null ? Collections.emptyList() : result;

@@ -23,6 +23,12 @@ public class UserController {
         return Flux.fromIterable(userService.getUsers());
     }
 
+    @GetMapping("/{id}")
+    public Mono<UserWithRoles> getUserByID(@PathVariable String id) {
+        return Mono.just(userService.getUserByID(id));
+
+    }
+
     @GetMapping("/{userIdentity}/roles")
     public Flux<UserRole> allRoles(@PathVariable String userIdentity) {
         return Flux.fromIterable(userService.getRoles(userIdentity));
