@@ -10,7 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UserWithRoles {
     String email;
-    String identity;
+    Long identity;
     String givenName;
     String familyName;
 

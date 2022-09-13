@@ -2,11 +2,11 @@ package org.opennms.devjam2022.apiserver.controller;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 import org.opennms.devjam2022.apiserver.model.UserRole;
 import org.opennms.devjam2022.apiserver.model.UserWithRoles;
+import static org.opennms.devjam2022.apiserver.model.utils.ModelUtil.ID_GENERATOR;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -18,7 +18,7 @@ public class UserControllerTest {
 
     @Test
     public void testGetUsers() {
-        List<UserWithRoles> users = userController.all();
+        List<UserWithRoles> users = userController.all().collectList().block();
         assertThat(users).isNotNull();
         assertThat(users).isNotEmpty();
     }
@@ -27,10 +27,10 @@ public class UserControllerTest {
     public void testAddUser() {
         UserWithRoles user = getUserWithRoles();
 
-        String userId = userController.addUser(user);
+        Long userId = Long.parseLong(userController.addUser(user).block());
         assertThat(userId).isNotNull();
 
-        List<UserWithRoles> users = userController.all();
+        List<UserWithRoles> users = userController.all().collectList().block();
         users.stream().filter(u -> u.getIdentity().equals(userId)).findFirst().ifPresentOrElse(u -> {
             assertThat(u.getIdentity()).isEqualTo(user.getIdentity());
             assertThat(u.getGivenName()).isEqualTo(user.getGivenName());
@@ -45,15 +45,15 @@ public class UserControllerTest {
     public void testAddRole() {
         UserWithRoles user = getUserWithRoles();
 
-        String userId = userController.addUser(user);
+        Long userId = Long.parseLong(userController.addUser(user).block());
         assertThat(userId).isNotNull();
 
         UserRole role = getTestRole();
-        String roleId = userController.addRole(userId, role);
+        Long roleId = Long.parseLong(userController.addRole(userId.toString(), role).block());
         assertThat(roleId).isNotNull();
 
         // See that we can see the roles now
-        List<UserRole> roles = userController.allRoles(userId);
+        List<UserRole> roles = userController.allRoles(userId.toString()).collectList().block();
         assertThat(roles).isNotNull();
         roles.stream().filter(r -> r.getId().equals(roleId)).findFirst().ifPresentOrElse(r -> {
             assertThat(r.getRole()).isEqualTo(role.getRole());
@@ -62,7 +62,7 @@ public class UserControllerTest {
         });
 
         // And also the user should be there and have all the roles
-        List<UserWithRoles> users = userController.all();
+        List<UserWithRoles> users = userController.all().collectList().block();
         assertThat(users).isNotNull();
         users.stream().filter(u -> u.getIdentity().equals(userId)).findFirst().ifPresentOrElse(u -> {
             assertThat(u.getIdentity()).isEqualTo(user.getIdentity());
@@ -84,48 +84,48 @@ public class UserControllerTest {
     @Test
     public void testDeleteUser() {
         UserWithRoles user = getUserWithRoles();
-        long userCount = userController.all().size();
+        long userCount = userController.all().collectList().block().size();
 
-        String userId = userController.addUser(user);
+        Long userId = Long.parseLong(userController.addUser(user).block());
         assertThat(userId).isNotNull();
 
-        assertThat(userController.all().size()).isEqualTo(userCount + 1);
+        assertThat(userController.all().collectList().block().size()).isEqualTo(userCount + 1);
 
-        userController.deleteUser(userId);
+        userController.deleteUser(userId.toString());
 
-        assertThat(userController.all().size()).isEqualTo(userCount);
+        assertThat(userController.all().collectList().block().size()).isEqualTo(userCount);
     }
 
     @Test
     public void testDeleteRole() {
         UserWithRoles user = getUserWithRoles();
 
-        String userId = userController.addUser(user);
+        Long userId = Long.parseLong(userController.addUser(user).block());
         assertThat(userId).isNotNull();
 
-        assertThat(userController.all()).isNotEmpty();
+        assertThat(userController.all().collectList().block()).isNotEmpty();
 
         UserRole role = getTestRole();
-        long roleCount = userController.allRoles(userId).size();
-        userController.addRole(userId, role);
+        long roleCount = userController.allRoles(userId.toString()).collectList().block().size();
+        Long roleId = Long.parseLong(userController.addRole(userId.toString(), role).block());
 
-        assertThat(userController.allRoles(userId).size()).isEqualTo(roleCount + 1);
+        assertThat(userController.allRoles(userId.toString()).collectList().block().size()).isEqualTo(roleCount + 1);
 
-        userController.deleteRole(userId, role.getId());
+        userController.deleteRole(userId.toString(), roleId.toString());
 
-        assertThat(userController.allRoles(userId).size()).isEqualTo(roleCount);
+        assertThat(userController.allRoles(userId.toString()).collectList().block().size()).isEqualTo(roleCount);
     }
 
     private static UserRole getTestRole() {
         return new UserRole(
-                UUID.randomUUID().toString(),
+                ID_GENERATOR.nextLong(),
                 "TestRole");
     }
 
     private static UserWithRoles getUserWithRoles() {
         return new UserWithRoles(
                 "tst@opennms.com",
-                UUID.randomUUID().toString(),
+                ID_GENERATOR.nextLong(),
                 "TestName",
                 "TestFamily",
                 new ArrayList<>());

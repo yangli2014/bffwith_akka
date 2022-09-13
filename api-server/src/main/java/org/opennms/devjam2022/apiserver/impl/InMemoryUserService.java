@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import org.opennms.devjam2022.apiserver.model.UserRole;
 import org.opennms.devjam2022.apiserver.model.UserWithRoles;
+import static org.opennms.devjam2022.apiserver.model.utils.ModelUtil.ID_GENERATOR;
 import org.springframework.stereotype.Component;
 
 /**
@@ -18,50 +19,56 @@ public class InMemoryUserService implements IUserService {
     // TECH-DEBT: This is not thread-safe first of all. Secondly, we can't delete pre-created users or roles.
     // most probably need to be refactored later to something more sophisticated, considering that Akka may
     // use HTTP2.0 and streaming to access this?
+    private static final Long USER1_ID = ID_GENERATOR.nextLong();
+    private static final Long USER2_ID = ID_GENERATOR.nextLong();
+    private static final Long USER3_ID = ID_GENERATOR.nextLong();
+
     static {
-        USER_ROLES.put("okta|08080dfjf90HF", List.of(
-                new UserRole("9feda264-32d1-11ed-a261-0242ac120002", "ROLE1"),
-                new UserRole("298b477c-3315-11ed-a261-0242ac120002", "ROLE2"),
-                new UserRole("3a2606b2-3315-11ed-a261-0242ac120002", "ROLE")
+        USER_ROLES.put(USER1_ID, List.of(
+                new UserRole(ID_GENERATOR.nextLong(), "ROLE1"),
+                new UserRole(ID_GENERATOR.nextLong(), "ROLE2"),
+                new UserRole(ID_GENERATOR.nextLong(), "ROLE")
         ));
 
-        USER_ROLES.put("okta|08080dfjhghdf90HF", List.of(
-                new UserRole("441328a8-3315-11ed-a261-0242ac120002", "ROLE2"),
-                new UserRole("4c64ebcc-3315-11ed-a261-0242ac120002", "ROLE")
+        USER_ROLES.put(USER2_ID, List.of(
+                new UserRole(ID_GENERATOR.nextLong(), "ROLE2"),
+                new UserRole(ID_GENERATOR.nextLong(), "ROLE")
         ));
 
-        USER_ROLES.put("okta|08080d798793fjf90HF", List.of(
-                new UserRole("522469f2-3315-11ed-a261-0242ac120002", "ROLE1")
+        USER_ROLES.put(USER3_ID, List.of(
+                new UserRole(ID_GENERATOR.nextLong(), "ROLE1")
         ));
 
         USERS.addAll(List.of(
                 new UserWithRoles(
                         "admin0831@opennms.com",
-                        "okta|08080dfjf90HF",
+                        USER1_ID,
                         "admin0831Name",
                         "admin0831LastName",
                         Collections.emptyList()
                 ),
                 new UserWithRoles(
                         "testuser@opennms.com",
-                        "okta|08080dfjhghdf90HF",
+                        USER2_ID,
                         "testuserName",
                         "testuserLastName",
                         Collections.emptyList()
                 ),
                 new UserWithRoles(
                         "interestinguser@opennms.com",
-                        "okta|08080d798793fjf90HF",
+                        USER3_ID,
                         "interestinguserName",
                         "interestinguserLastName",
                         Collections.emptyList()
                 )));
     }
 
+    // TECH-DEBT: See the Issue #11 (https://github.com/yangli2014/bffwith_akka/issues/11)
+    // we probably will need to modify it to the unblocking way.
     @Override
     public List<UserWithRoles> getUsers() {
         return USERS.stream().map(user -> {
-            final List<UserRole> roles = getRoles(user.getIdentity());
+            final List<UserRole> roles = getRoles(user.getIdentity().toString());
             return new UserWithRoles(
                     user.getEmail(),
                     user.getIdentity(),
@@ -73,35 +80,39 @@ public class InMemoryUserService implements IUserService {
 
     @Override
     public List<UserRole> getRoles(String userIdentity) {
-        List<UserRole> result = (List<UserRole>) USER_ROLES.get(userIdentity);
+        List<UserRole> result = (List<UserRole>) USER_ROLES.get(Long.parseLong(userIdentity));
         return result == null ? Collections.emptyList() : result;
     }
 
     @Override
     public String addUser(UserWithRoles user) {
-        user.setIdentity(UUID.randomUUID().toString());
+        user.setIdentity(ID_GENERATOR.nextLong());
         USERS.add(user);
 
-        return user.getIdentity();
+        return user.getIdentity().toString();
     }
 
     @Override
     public String addRole(String userIdentity, UserRole role) {
-        role.setId(UUID.randomUUID().toString());
+        role.setId(ID_GENERATOR.nextLong());
+        Long userId = Long.parseLong(userIdentity);
 
-        if (!USER_ROLES.containsKey(userIdentity)) {
-            USER_ROLES.put(userIdentity, new LinkedList<>());
+        if (!USER_ROLES.containsKey(userId)) {
+            USER_ROLES.put(userId, new LinkedList<>());
         }
 
-        ((List<UserRole>) USER_ROLES.get(userIdentity)).add(role);
-        return role.getId();
+        ((List<UserRole>) USER_ROLES.get(userId)).add(role);
+        return role.getId().toString();
     }
 
     @Override
     public boolean deleteRole(String userIdentity, String roleId) {
-        if (USER_ROLES.containsKey(userIdentity)) {
-            List<UserRole> roles = (List<UserRole>) USER_ROLES.get(userIdentity);
-            return roles.removeIf(role -> role.getId().equals(roleId));
+        Long userId = Long.parseLong(userIdentity);
+        Long rlId = Long.parseLong(roleId);
+
+        if (USER_ROLES.containsKey(userId)) {
+            List<UserRole> roles = (List<UserRole>) USER_ROLES.get(userId);
+            return roles.removeIf(role -> role.getId().equals(rlId));
         } else {
             return false;
         }
@@ -109,8 +120,10 @@ public class InMemoryUserService implements IUserService {
 
     @Override
     public boolean deleteUser(String userIdentity) {
-        boolean userWasRemoved = USERS.removeIf(user -> user.getIdentity().equals(userIdentity));
-        USER_ROLES.remove(userIdentity);
+        Long userId = Long.parseLong(userIdentity);
+
+        boolean userWasRemoved = USERS.removeIf(user -> user.getIdentity().equals(userId));
+        USER_ROLES.remove(userId);
         return userWasRemoved;
     }
 }
