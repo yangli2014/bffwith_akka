@@ -9,6 +9,5 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UserRole {
     String id;
-    String userIdentity;
     String role;
 }
