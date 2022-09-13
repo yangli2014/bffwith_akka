@@ -41,9 +41,7 @@ import akka.actor.typed.ActorSystem;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.http.javadsl.Http;
 import akka.http.javadsl.ServerBinding;
-import akka.http.javadsl.model.HttpEntity;
 import akka.http.javadsl.model.HttpResponse;
-import akka.http.javadsl.model.StatusCodes;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
 
@@ -84,6 +82,10 @@ public class BFFApplication extends AllDirectives {
     } else {
       return CompletableFuture.completedFuture(Optional.empty());
     }
+  }
+
+  private void logResponse(HttpResponse response) {
+    System.out.println(response.status() + ": " + response.entity().toString());
   }
 
   private Route createRoute() {

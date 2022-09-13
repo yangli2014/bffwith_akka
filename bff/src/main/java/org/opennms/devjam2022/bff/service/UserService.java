@@ -46,32 +46,19 @@ public class UserService {
   }
 
   public CompletionStage<HttpResponse> listUsers(){
-    return executeRequest(BASE_SERVER_URL_USERS, HttpMethods.GET);
+    return get(BASE_SERVER_URL_USERS);
   }
 
   public CompletionStage<HttpResponse> getUserByID(long id) {
-    return executeRequest(BASE_SERVER_URL_USERS + "/" + id, HttpMethods.GET);
+    return get(BASE_SERVER_URL_USERS + "/" + id);
   }
 
   public CompletionStage<HttpResponse> createUser(RequestEntity userData) {
-    return executeRequest(BASE_SERVER_URL_USERS, HttpMethods.POST, userData);
+    return post(BASE_SERVER_URL_USERS, userData);
   }
 
   public CompletionStage<HttpResponse> deleteUser(long id) {
-    return executeRequest(BASE_SERVER_URL_USERS + "/" + id, HttpMethods.DELETE);
-  }
-
-  private CompletionStage<HttpResponse> executeRequest(String url, HttpMethod method) {
-    return executeRequest(url, method, null);
-  }
-
-  private CompletionStage<HttpResponse> executeRequest(String url, HttpMethod method, RequestEntity data) {
-    HttpRequest request = HttpRequest.create(url);
-    request.withMethod(method);
-    if(data != null) {
-      request.withEntity(data);
-    }
-    return httpClient.singleRequest(request);
+    return delete(BASE_SERVER_URL_USERS + "/" + id + "/delete");
   }
 
   private CompletionStage<HttpResponse> get(String url) {
