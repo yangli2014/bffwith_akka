@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import org.opennms.devjam2022.apiserver.model.UserRole;
 import org.opennms.devjam2022.apiserver.model.UserWithRoles;
-import static org.opennms.devjam2022.apiserver.model.utils.ModelUtil.ID_GENERATOR;
+import org.opennms.devjam2022.apiserver.model.utils.ModelUtil;
 import org.springframework.stereotype.Component;
 
 /**
@@ -19,24 +19,24 @@ public class InMemoryUserService implements IUserService {
     // TECH-DEBT: This is not thread-safe first of all. Secondly, we can't delete pre-created users or roles.
     // most probably need to be refactored later to something more sophisticated, considering that Akka may
     // use HTTP2.0 and streaming to access this?
-    private static final Long USER1_ID = ID_GENERATOR.nextLong();
-    private static final Long USER2_ID = ID_GENERATOR.nextLong();
-    private static final Long USER3_ID = ID_GENERATOR.nextLong();
+    private static final String USER1_ID = ModelUtil.generateId();
+    private static final String USER2_ID = ModelUtil.generateId();
+    private static final String USER3_ID = ModelUtil.generateId();
 
     static {
         USER_ROLES.put(USER1_ID, List.of(
-                new UserRole(ID_GENERATOR.nextLong(), "ROLE1"),
-                new UserRole(ID_GENERATOR.nextLong(), "ROLE2"),
-                new UserRole(ID_GENERATOR.nextLong(), "ROLE")
+                new UserRole(ModelUtil.generateId(), "ROLE1"),
+                new UserRole(ModelUtil.generateId(), "ROLE2"),
+                new UserRole(ModelUtil.generateId(), "ROLE")
         ));
 
         USER_ROLES.put(USER2_ID, List.of(
-                new UserRole(ID_GENERATOR.nextLong(), "ROLE2"),
-                new UserRole(ID_GENERATOR.nextLong(), "ROLE")
+                new UserRole(ModelUtil.generateId(), "ROLE2"),
+                new UserRole(ModelUtil.generateId(), "ROLE")
         ));
 
         USER_ROLES.put(USER3_ID, List.of(
-                new UserRole(ID_GENERATOR.nextLong(), "ROLE1")
+                new UserRole(ModelUtil.generateId(), "ROLE1")
         ));
 
         USERS.addAll(List.of(
@@ -68,7 +68,7 @@ public class InMemoryUserService implements IUserService {
     @Override
     public List<UserWithRoles> getUsers() {
         return USERS.stream().map(user -> {
-            final List<UserRole> roles = getRoles(user.getIdentity().toString());
+            final List<UserRole> roles = getRoles(user.getIdentity());
             return new UserWithRoles(
                     user.getEmail(),
                     user.getIdentity(),
@@ -80,39 +80,35 @@ public class InMemoryUserService implements IUserService {
 
     @Override
     public List<UserRole> getRoles(String userIdentity) {
-        List<UserRole> result = (List<UserRole>) USER_ROLES.get(Long.parseLong(userIdentity));
+        List<UserRole> result = (List<UserRole>) USER_ROLES.get(userIdentity);
         return result == null ? Collections.emptyList() : result;
     }
 
     @Override
     public String addUser(UserWithRoles user) {
-        user.setIdentity(ID_GENERATOR.nextLong());
+        user.setIdentity(ModelUtil.generateId());
         USERS.add(user);
 
-        return user.getIdentity().toString();
+        return user.getIdentity();
     }
 
     @Override
     public String addRole(String userIdentity, UserRole role) {
-        role.setId(ID_GENERATOR.nextLong());
-        Long userId = Long.parseLong(userIdentity);
+        role.setId(ModelUtil.generateId());
 
-        if (!USER_ROLES.containsKey(userId)) {
-            USER_ROLES.put(userId, new LinkedList<>());
+        if (!USER_ROLES.containsKey(userIdentity)) {
+            USER_ROLES.put(userIdentity, new LinkedList<>());
         }
 
-        ((List<UserRole>) USER_ROLES.get(userId)).add(role);
-        return role.getId().toString();
+        ((List<UserRole>) USER_ROLES.get(userIdentity)).add(role);
+        return role.getId();
     }
 
     @Override
     public boolean deleteRole(String userIdentity, String roleId) {
-        Long userId = Long.parseLong(userIdentity);
-        Long rlId = Long.parseLong(roleId);
-
-        if (USER_ROLES.containsKey(userId)) {
-            List<UserRole> roles = (List<UserRole>) USER_ROLES.get(userId);
-            return roles.removeIf(role -> role.getId().equals(rlId));
+        if (USER_ROLES.containsKey(userIdentity)) {
+            List<UserRole> roles = (List<UserRole>) USER_ROLES.get(userIdentity);
+            return roles.removeIf(role -> role.getId().equals(roleId));
         } else {
             return false;
         }
@@ -120,10 +116,8 @@ public class InMemoryUserService implements IUserService {
 
     @Override
     public boolean deleteUser(String userIdentity) {
-        Long userId = Long.parseLong(userIdentity);
-
-        boolean userWasRemoved = USERS.removeIf(user -> user.getIdentity().equals(userId));
-        USER_ROLES.remove(userId);
+        boolean userWasRemoved = USERS.removeIf(user -> user.getIdentity().equals(userIdentity));
+        USER_ROLES.remove(userIdentity);
         return userWasRemoved;
     }
 }

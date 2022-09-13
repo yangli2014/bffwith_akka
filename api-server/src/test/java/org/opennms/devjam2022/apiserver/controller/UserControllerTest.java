@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 import org.opennms.devjam2022.apiserver.model.UserRole;
 import org.opennms.devjam2022.apiserver.model.UserWithRoles;
-import static org.opennms.devjam2022.apiserver.model.utils.ModelUtil.ID_GENERATOR;
+import org.opennms.devjam2022.apiserver.model.utils.ModelUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -27,7 +27,7 @@ public class UserControllerTest {
     public void testAddUser() {
         UserWithRoles user = getUserWithRoles();
 
-        Long userId = Long.parseLong(userController.addUser(user).block());
+        String userId = userController.addUser(user).block();
         assertThat(userId).isNotNull();
 
         List<UserWithRoles> users = userController.all().collectList().block();
@@ -45,11 +45,11 @@ public class UserControllerTest {
     public void testAddRole() {
         UserWithRoles user = getUserWithRoles();
 
-        Long userId = Long.parseLong(userController.addUser(user).block());
+        String userId = userController.addUser(user).block();
         assertThat(userId).isNotNull();
 
         UserRole role = getTestRole();
-        Long roleId = Long.parseLong(userController.addRole(userId.toString(), role).block());
+        String roleId = userController.addRole(userId.toString(), role).block();
         assertThat(roleId).isNotNull();
 
         // See that we can see the roles now
@@ -86,7 +86,7 @@ public class UserControllerTest {
         UserWithRoles user = getUserWithRoles();
         long userCount = userController.all().collectList().block().size();
 
-        Long userId = Long.parseLong(userController.addUser(user).block());
+        String userId = userController.addUser(user).block();
         assertThat(userId).isNotNull();
 
         assertThat(userController.all().collectList().block().size()).isEqualTo(userCount + 1);
@@ -100,32 +100,32 @@ public class UserControllerTest {
     public void testDeleteRole() {
         UserWithRoles user = getUserWithRoles();
 
-        Long userId = Long.parseLong(userController.addUser(user).block());
+        String userId = userController.addUser(user).block();
         assertThat(userId).isNotNull();
 
         assertThat(userController.all().collectList().block()).isNotEmpty();
 
         UserRole role = getTestRole();
-        long roleCount = userController.allRoles(userId.toString()).collectList().block().size();
-        Long roleId = Long.parseLong(userController.addRole(userId.toString(), role).block());
+        long roleCount = userController.allRoles(userId).collectList().block().size();
+        String roleId = userController.addRole(userId, role).block();
 
-        assertThat(userController.allRoles(userId.toString()).collectList().block().size()).isEqualTo(roleCount + 1);
+        assertThat(userController.allRoles(userId).collectList().block().size()).isEqualTo(roleCount + 1);
 
-        userController.deleteRole(userId.toString(), roleId.toString());
+        userController.deleteRole(userId, roleId);
 
-        assertThat(userController.allRoles(userId.toString()).collectList().block().size()).isEqualTo(roleCount);
+        assertThat(userController.allRoles(userId).collectList().block().size()).isEqualTo(roleCount);
     }
 
     private static UserRole getTestRole() {
         return new UserRole(
-                ID_GENERATOR.nextLong(),
+                ModelUtil.generateId(),
                 "TestRole");
     }
 
     private static UserWithRoles getUserWithRoles() {
         return new UserWithRoles(
                 "tst@opennms.com",
-                ID_GENERATOR.nextLong(),
+                ModelUtil.generateId(),
                 "TestName",
                 "TestFamily",
                 new ArrayList<>());

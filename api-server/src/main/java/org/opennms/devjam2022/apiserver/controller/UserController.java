@@ -1,6 +1,5 @@
 package org.opennms.devjam2022.apiserver.controller;
 
-import java.util.List;
 import org.opennms.devjam2022.apiserver.impl.IUserService;
 import org.opennms.devjam2022.apiserver.model.UserRole;
 import org.opennms.devjam2022.apiserver.model.UserWithRoles;
