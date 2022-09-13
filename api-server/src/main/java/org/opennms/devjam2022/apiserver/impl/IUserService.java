@@ -7,6 +7,8 @@ import org.opennms.devjam2022.apiserver.model.UserWithRoles;
 public interface IUserService {
     List<UserWithRoles> getUsers();
 
+    UserWithRoles getUserByID(String id);
+
     List<UserRole> getRoles(String userIdentity);
 
     String addUser(UserWithRoles user);
