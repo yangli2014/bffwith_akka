@@ -28,15 +28,26 @@
 
 package org.opennms.devjam2022.bff;
 
+import static akka.http.javadsl.server.PathMatchers.longSegment;
+
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeUnit;
 
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.http.javadsl.Http;
 import akka.http.javadsl.ServerBinding;
+import akka.http.javadsl.model.ContentType;
+import akka.http.javadsl.model.ContentTypes;
+import akka.http.javadsl.model.HttpEntities;
+import akka.http.javadsl.model.HttpEntity;
+import akka.http.javadsl.model.HttpResponse;
+import akka.http.javadsl.model.MediaType;
+import akka.http.javadsl.model.MediaTypes;
+import akka.http.javadsl.model.StatusCodes;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
 
@@ -59,11 +70,42 @@ public class BFFApplication extends AllDirectives {
 
   }
 
-  private Route createRoute() {
+  private CompletionStage<Optional<String>> listUsers() {
+    return CompletableFuture.completedFuture(Optional.of("{\"data\": \"list of users\"}"));
+  }
 
+  private CompletionStage<Optional<String>> getUserById(long id) {
+    if(id > 0 && id < 10) {
+      return CompletableFuture.completedFuture(Optional.of("{\"data\": \"user " + id +"\"}"));
+    } else {
+      return CompletableFuture.completedFuture(Optional.empty());
+    }
+  }
+
+  private Route createRoute() {
     return concat(
         get(() ->
-            path("users", () -> complete("list of users")))
+            path("users", () -> {
+              CompletionStage<Optional<String>> result = listUsers();
+              return onSuccess(result, maybe -> maybe.map(str -> complete(StatusCodes.OK, str))
+                  .orElseGet(() -> complete(StatusCodes.NOT_FOUND, "{\"error\": \"Not Found\"}")));
+            }))
+        ,
+        get(() ->
+            pathPrefix("users", () ->
+                path(longSegment(), (Long id) -> {
+                  final CompletionStage<Optional<String>> futureMaybeUser = getUserById(id);
+                  return onSuccess(futureMaybeUser, maybeUser ->
+                      maybeUser.map(user -> complete(StatusCodes.OK, user))
+                          .orElseGet(() -> complete(StatusCodes.NOT_FOUND, "{\"error\": \"Not Found\"}"))
+                  );
+                }))),
+        post(() ->
+            path("users", () -> extractRequestEntity(entity -> {
+              final HttpEntity.Strict strict = (HttpEntity.Strict) entity;
+              System.out.println(strict.getData().utf8String());
+              return complete(StatusCodes.OK, "{\"data\": \"data saved\"}");
+            })))
     );
   }
 }

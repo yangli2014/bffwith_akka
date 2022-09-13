@@ -30,4 +30,15 @@ package org.opennms.devjam2022.bff.service;
 
 public class UserService {
 
+  public String listUsers(){
+    return null;
+  }
+
+  public String getUserByID(long id) {
+    return null;
+  }
+
+  public Long createUser(String userData) {
+    return null;
+  }
 }
