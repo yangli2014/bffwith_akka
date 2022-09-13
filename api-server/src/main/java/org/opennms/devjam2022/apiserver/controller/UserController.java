@@ -1,6 +1,5 @@
 package org.opennms.devjam2022.apiserver.controller;
 
-import java.util.List;
 import org.opennms.devjam2022.apiserver.impl.IUserService;
 import org.opennms.devjam2022.apiserver.model.UserRole;
 import org.opennms.devjam2022.apiserver.model.UserWithRoles;
@@ -22,6 +21,12 @@ public class UserController {
     @GetMapping("/")
     public Flux<UserWithRoles> all() {
         return Flux.fromIterable(userService.getUsers());
+    }
+
+    @GetMapping("/{id}")
+    public Mono<UserWithRoles> getUserByID(@PathVariable String id) {
+        return Mono.just(userService.getUserByID(id));
+
     }
 
     @GetMapping("/{userIdentity}/roles")
