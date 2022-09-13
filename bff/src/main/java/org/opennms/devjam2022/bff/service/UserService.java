@@ -27,18 +27,62 @@
  *******************************************************************************/
 
 package org.opennms.devjam2022.bff.service;
+import java.util.concurrent.CompletionStage;
+
+import akka.http.javadsl.Http;
+import akka.http.javadsl.model.HttpMethod;
+import akka.http.javadsl.model.HttpMethods;
+import akka.http.javadsl.model.HttpRequest;
+import akka.http.javadsl.model.HttpResponse;
+import akka.http.javadsl.model.RequestEntity;
 
 public class UserService {
+  private static final String BASE_SERVER_URL_USERS = "http://localhost:8080/v1/users";
 
-  public String listUsers(){
-    return null;
+  private final Http httpClient;
+
+  public UserService(Http httpClient) {
+    this.httpClient = httpClient;
   }
 
-  public String getUserByID(long id) {
-    return null;
+  public CompletionStage<HttpResponse> listUsers(){
+    return executeRequest(BASE_SERVER_URL_USERS, HttpMethods.GET);
   }
 
-  public Long createUser(String userData) {
-    return null;
+  public CompletionStage<HttpResponse> getUserByID(long id) {
+    return executeRequest(BASE_SERVER_URL_USERS + "/" + id, HttpMethods.GET);
+  }
+
+  public CompletionStage<HttpResponse> createUser(RequestEntity userData) {
+    return executeRequest(BASE_SERVER_URL_USERS, HttpMethods.POST, userData);
+  }
+
+  public CompletionStage<HttpResponse> deleteUser(long id) {
+    return executeRequest(BASE_SERVER_URL_USERS + "/" + id, HttpMethods.DELETE);
+  }
+
+  private CompletionStage<HttpResponse> executeRequest(String url, HttpMethod method) {
+    return executeRequest(url, method, null);
+  }
+
+  private CompletionStage<HttpResponse> executeRequest(String url, HttpMethod method, RequestEntity data) {
+    HttpRequest request = HttpRequest.create(url);
+    request.withMethod(method);
+    if(data != null) {
+      request.withEntity(data);
+    }
+    return httpClient.singleRequest(request);
+  }
+
+  private CompletionStage<HttpResponse> get(String url) {
+    return httpClient.singleRequest(HttpRequest.GET(url));
+  }
+
+  private CompletionStage<HttpResponse> post(String url, RequestEntity data) {
+    return httpClient.singleRequest(HttpRequest.POST(url).withEntity(data));
+  }
+
+  private CompletionStage<HttpResponse> delete(String url) {
+    return httpClient.singleRequest(HttpRequest.DELETE(url));
   }
 }
