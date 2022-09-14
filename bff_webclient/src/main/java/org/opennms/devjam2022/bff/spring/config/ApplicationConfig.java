@@ -26,26 +26,20 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.devjam2022.lib;
+package org.opennms.devjam2022.bff.spring.config;
 
-public class User {
-  private long id;
-  private String firstName;
-  private String lastName;
-  private Address address;
+import org.opennms.devjam2022.bff.spring.service.GatewayService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-  public User(long id, String firstName, String lastName, Address address) {
-    this.id = id;
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.address = address;
-  }
+@Configuration
+public class ApplicationConfig {
+  @Value("${api.base.url: http://localhost:8080/v1}")
+  private String apiBasURL;
 
-  public long getId() {
-    return id;
-  }
-
-  public void setId(long id) {
-    this.id = id;
+  @Bean
+  public GatewayService createGateway() {
+    return new GatewayService(apiBasURL);
   }
 }
