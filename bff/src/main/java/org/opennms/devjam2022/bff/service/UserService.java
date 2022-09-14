@@ -27,11 +27,10 @@
  *******************************************************************************/
 
 package org.opennms.devjam2022.bff.service;
+
 import java.util.concurrent.CompletionStage;
 
 import akka.http.javadsl.Http;
-import akka.http.javadsl.model.HttpMethod;
-import akka.http.javadsl.model.HttpMethods;
 import akka.http.javadsl.model.HttpRequest;
 import akka.http.javadsl.model.HttpResponse;
 import akka.http.javadsl.model.RequestEntity;
@@ -49,7 +48,7 @@ public class UserService {
     return get(BASE_SERVER_URL_USERS);
   }
 
-  public CompletionStage<HttpResponse> getUserByID(long id) {
+  public CompletionStage<HttpResponse> getUserByID(String id) {
     return get(BASE_SERVER_URL_USERS + "/" + id);
   }
 

@@ -29,6 +29,7 @@
 package org.opennms.devjam2022.bff;
 
 import static akka.http.javadsl.server.PathMatchers.longSegment;
+import static akka.http.javadsl.server.PathMatchers.segment;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -98,7 +99,7 @@ public class BFFApplication extends AllDirectives {
         ,
         get(() ->
             pathPrefix("users", () ->
-                path(longSegment(), (Long id) -> {
+                path(segment(), (String id) -> {
                   final CompletionStage<HttpResponse> responseFuture = service.getUserByID(id);
                   return onSuccess(responseFuture, response -> complete(response.status(), response.entity()));
                 }))),

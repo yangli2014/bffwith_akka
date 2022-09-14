@@ -36,7 +36,7 @@ public class UserController {
 
     @PostMapping()
     public Mono<String> addUser(@RequestBody UserWithRoles user) {
-        return Mono.just(userService.addUser(user));
+        return Mono.fromCallable(()->userService.addUser(user));
     }
 
     @PostMapping("/{userIdentity}/addRole")
