@@ -3,4 +3,19 @@ GET http://localhost:8083/users
 accept: application/json
 
 ### get user by id
-GET http://localhost:8083/users/6796170878378971566
+GET http://localhost:8083/users/5875795111229077496
+accept: application/json
+
+### create user
+POST http://localhost:8083/users
+Content-Type: application/json
+Accept: application/json
+
+{
+  "givenName": "test user",
+  "familyName": "Op",
+  "email": "testuser@opennms.com"
+}
+
+### delete user
+DELETE http://localhost:8083/users/5875795111229077496

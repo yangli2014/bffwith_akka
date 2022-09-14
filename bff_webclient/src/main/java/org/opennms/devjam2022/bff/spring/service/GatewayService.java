@@ -29,14 +29,12 @@
 package org.opennms.devjam2022.bff.spring.service;
 
 
-import org.opennms.devjam2022.bff.spring.model.UserWithRoles;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -52,28 +50,28 @@ public class GatewayService {
         .build();
   }
 
-  public Flux<UserWithRoles> listUsers() {
+  public Flux<JsonNode> listUsers() {
     return webClient.method(HttpMethod.GET).uri("/users")
-        .retrieve().bodyToFlux(UserWithRoles.class);
+        .retrieve().bodyToFlux(JsonNode.class);
   }
 
-  public Mono<UserWithRoles> getUserByID(String id){
-    return executeRequest("/users/" + id, HttpMethod.GET, UserWithRoles.class);
+  public Mono<JsonNode> getUserByID(String id){
+    return executeRequest("/users/" + id, HttpMethod.GET);
   }
 
-  public Mono<String> createUser(String data) {
-    return executeRequest("/users", HttpMethod.POST, data, String.class);
+  public Mono<JsonNode> createUser(String data) {
+    return executeRequest("/users", HttpMethod.POST, data);
   }
 
-  public Mono<Void> deleteUser(String id) {
-    return executeRequest("/users/" + id, HttpMethod.DELETE, Void.TYPE);
+  public Mono<JsonNode> deleteUser(String id) {
+    return executeRequest("/users/" + id + "/delete", HttpMethod.DELETE);
   }
 
-  private <T> Mono <T> executeRequest(String path, HttpMethod method, Class<T> returnType) {
-    return executeRequest(path, method, null, returnType);
+  private Mono <JsonNode> executeRequest(String path, HttpMethod method) {
+    return executeRequest(path, method, null);
   }
 
-  private <T> Mono <T> executeRequest(String path, HttpMethod method, String data, Class<T> returnType) {
+  private Mono <JsonNode> executeRequest(String path, HttpMethod method, String data) {
     WebClient.RequestBodySpec request = webClient
         .method(method)
         .uri(path);
@@ -81,6 +79,6 @@ public class GatewayService {
       request.contentType(MediaType.APPLICATION_JSON).bodyValue(data);
     }
     WebClient.ResponseSpec response =  request.retrieve();
-    return response.bodyToMono(returnType);
+    return response.bodyToMono(JsonNode.class);
   }
 }
