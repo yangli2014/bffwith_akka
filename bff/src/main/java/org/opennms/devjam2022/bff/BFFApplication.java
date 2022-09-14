@@ -29,28 +29,38 @@
 package org.opennms.devjam2022.bff;
 
 import static akka.http.javadsl.server.PathMatchers.longSegment;
+import static akka.http.javadsl.server.PathMatchers.segment;
 
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+import org.opennms.devjam2022.bff.service.UserService;
+
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.http.javadsl.Http;
 import akka.http.javadsl.ServerBinding;
-import akka.http.javadsl.model.HttpEntity;
-import akka.http.javadsl.model.StatusCodes;
+import akka.http.javadsl.model.HttpResponse;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
 
 public class BFFApplication extends AllDirectives {
+  private final UserService service;
+
+  private BFFApplication(UserService service) {
+    this.service = service;
+  }
+
   public static void main(String[] args) throws IOException {
     ActorSystem<Void> actorSystem = ActorSystem.create(Behaviors.empty(), "bff-actor-system");
 
     final Http http = Http.get(actorSystem);
 
-    BFFApplication app = new BFFApplication();
+    UserService userService = new UserService(http);
+
+    BFFApplication app = new BFFApplication(userService);
 
     final CompletionStage<ServerBinding> binding = http.newServerAt("localhost", 8081)
         .bind(app.createRoute());
@@ -75,37 +85,33 @@ public class BFFApplication extends AllDirectives {
     }
   }
 
+  private void logResponse(HttpResponse response) {
+    System.out.println(response.status() + ": " + response.entity().toString());
+  }
+
   private Route createRoute() {
     return concat(
         get(() ->
             path("users", () -> {
-              CompletionStage<Optional<String>> result = listUsers();
-              return onSuccess(result, maybe -> maybe.map(str -> complete(StatusCodes.OK, str))
-                  .orElseGet(() -> complete(StatusCodes.NOT_FOUND, "{\"error\": \"Not Found\"}")));
+              CompletionStage<HttpResponse> responseFuture = service.listUsers();
+              return onSuccess(responseFuture, response -> complete(response.status(), response.entity()));
             }))
         ,
         get(() ->
             pathPrefix("users", () ->
-                path(longSegment(), (Long id) -> {
-                  final CompletionStage<Optional<String>> futureMaybeUser = getUserById(id);
-                  return onSuccess(futureMaybeUser, maybeUser ->
-                      maybeUser.map(user -> complete(StatusCodes.OK, user))
-                          .orElseGet(() -> complete(StatusCodes.NOT_FOUND, "{\"error\": \"Not Found\"}"))
-                  );
+                path(segment(), (String id) -> {
+                  final CompletionStage<HttpResponse> responseFuture = service.getUserByID(id);
+                  return onSuccess(responseFuture, response -> complete(response.status(), response.entity()));
                 }))),
         post(() ->
             path("users", () -> extractRequestEntity(entity -> {
-              final HttpEntity.Strict strict = (HttpEntity.Strict) entity;
-              System.out.println(strict.getData().utf8String());
-              return complete(StatusCodes.OK, "{\"data\": \"user saved\"}");
+              CompletionStage<HttpResponse> responseFuture = service.createUser(entity);
+              return onSuccess(responseFuture, res -> complete(res.status(), res.entity()));
             }))),
         delete(() -> pathPrefix("users", () ->
             path(longSegment(), (Long id) -> {
-              if(id<10) {
-                return complete(StatusCodes.NO_CONTENT);
-              } else {
-                return complete(StatusCodes.NOT_FOUND, "{\"error\": \"Not Found\"}");
-              }
+             CompletionStage<HttpResponse> responseFuture = service.deleteUser(id);
+             return onSuccess(responseFuture, res -> complete(res.status(), res.entity()));
             })))
     );
   }

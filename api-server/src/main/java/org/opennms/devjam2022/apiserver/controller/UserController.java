@@ -23,7 +23,7 @@ public class UserController {
     @Autowired
     IUserService userService;
 
-    @GetMapping("/")
+    @GetMapping()
     public Flux<UserWithRoles> all() {
         return Flux.fromIterable(userService.getUsers());
     }
@@ -39,9 +39,9 @@ public class UserController {
         return Flux.fromIterable(userService.getRoles(userIdentity));
     }
 
-    @PostMapping("/add")
+    @PostMapping()
     public Mono<String> addUser(@RequestBody UserWithRoles user) {
-        return Mono.just(userService.addUser(user));
+        return Mono.fromCallable(()->userService.addUser(user));
     }
 
     @PostMapping("/{userIdentity}/addRole")
