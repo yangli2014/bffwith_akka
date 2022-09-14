@@ -18,7 +18,7 @@ public class UserControllerTest {
 
     @Test
     public void testGetUsers() {
-        List<UserWithRoles> users = userController.all().collectList().block();
+        List<UserWithRoles> users = userController.all();
         assertThat(users).isNotNull();
         assertThat(users).isNotEmpty();
     }
@@ -27,10 +27,10 @@ public class UserControllerTest {
     public void testAddUser() {
         UserWithRoles user = createTestUserWithEmptyListRoles();
 
-        String userId = userController.addUser(user).block();
+        String userId = userController.addUser(user);
         assertThat(userId).isNotNull();
 
-        List<UserWithRoles> users = userController.all().collectList().block();
+        List<UserWithRoles> users = userController.all();
         users.stream().filter(u -> u.getIdentity().equals(userId)).findFirst().ifPresentOrElse(u -> {
             assertThat(u.getIdentity()).isEqualTo(user.getIdentity());
             assertThat(u.getGivenName()).isEqualTo(user.getGivenName());
@@ -45,15 +45,15 @@ public class UserControllerTest {
     public void testAddRole() {
         UserWithRoles user = createTestUserWithEmptyListRoles();
 
-        String userId = userController.addUser(user).block();
+        String userId = userController.addUser(user);
         assertThat(userId).isNotNull();
 
         UserRole role = createTestRole();
-        String roleId = userController.addRole(userId, role).block();
+        String roleId = userController.addRole(userId, role);
         assertThat(roleId).isNotNull();
 
         // See that we can see the roles now
-        List<UserRole> roles = userController.allRoles(userId).collectList().block();
+        List<UserRole> roles = userController.allRoles(userId);
         assertThat(roles).isNotNull();
         roles.stream().filter(r -> r.getId().equals(roleId)).findFirst().ifPresentOrElse(r -> {
             assertThat(r.getRole()).isEqualTo(role.getRole());
@@ -62,7 +62,7 @@ public class UserControllerTest {
         });
 
         // And also the user should be there and have all the roles
-        List<UserWithRoles> users = userController.all().collectList().block();
+        List<UserWithRoles> users = userController.all();
         assertThat(users).isNotNull();
         users.stream().filter(u -> u.getIdentity().equals(userId)).findFirst().ifPresentOrElse(u -> {
             assertThat(u.getIdentity()).isEqualTo(user.getIdentity());
@@ -84,35 +84,35 @@ public class UserControllerTest {
     @Test
     public void testDeleteUser() {
         UserWithRoles user = createTestUserWithEmptyListRoles();
-        long userCount = userController.all().collectList().block().size();
+        long userCount = userController.all().size();
 
-        String userId = userController.addUser(user).block();
+        String userId = userController.addUser(user);
         assertThat(userId).isNotNull();
 
-        assertThat(userController.all().collectList().block().size()).isEqualTo(userCount + 1);
+        assertThat(userController.all().size()).isEqualTo(userCount + 1);
 
         userController.deleteUser(userId);
 
-        assertThat(userController.all().collectList().block().size()).isEqualTo(userCount);
+        assertThat(userController.all().size()).isEqualTo(userCount);
     }
 
     @Test
     public void testDeleteRole() {
         UserWithRoles user = createTestUserWithEmptyListRoles();
 
-        String userId = userController.addUser(user).block();
+        String userId = userController.addUser(user);
         assertThat(userId).isNotNull();
 
-        assertThat(userController.all().collectList().block()).isNotEmpty();
+        assertThat(userController.all()).isNotEmpty();
 
         UserRole role = createTestRole();
-        long roleCount = userController.allRoles(userId).collectList().block().size();
-        String roleId = userController.addRole(userId, role).block();
+        long roleCount = userController.allRoles(userId).size();
+        String roleId = userController.addRole(userId, role);
 
-        assertThat(userController.allRoles(userId).collectList().block().size()).isEqualTo(roleCount + 1);
+        assertThat(userController.allRoles(userId).size()).isEqualTo(roleCount + 1);
 
         userController.deleteRole(userId, roleId);
 
-        assertThat(userController.allRoles(userId).collectList().block().size()).isEqualTo(roleCount);
+        assertThat(userController.allRoles(userId).size()).isEqualTo(roleCount);
     }
 }
