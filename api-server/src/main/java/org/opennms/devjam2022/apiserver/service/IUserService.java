@@ -1,21 +1,36 @@
 package org.opennms.devjam2022.apiserver.service;
 
+import java.util.Collections;
 import java.util.List;
 import org.opennms.devjam2022.apiserver.model.UserRole;
 import org.opennms.devjam2022.apiserver.model.UserWithRoles;
 
 public interface IUserService {
-    List<UserWithRoles> getUsers();
+    default List<UserWithRoles> getUsers() {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
 
-    UserWithRoles getUserByID(String id);
+    default UserWithRoles getUserByID(String id) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
 
-    List<UserRole> getRoles(String userIdentity);
+    default List<UserRole> getRoles(String userIdentity) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
 
-    String addUser(UserWithRoles user);
+    default String addUser(UserWithRoles user) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
 
-    String addRole(String userIdentity, UserRole role);
+    default String addRole(String userIdentity, UserRole role) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
 
-    boolean deleteRole(String userIdentity, String roleId);
+    default boolean deleteRole(String userIdentity, String roleId) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
 
-    boolean deleteUser(String userIdentity);
+    default boolean deleteUser(String userIdentity) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
 }

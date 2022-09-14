@@ -1,5 +1,6 @@
 package org.opennms.devjam2022.apiserver.controller;
 
+import org.opennms.devjam2022.apiserver.impl.InMemoryUserServiceNB;
 import org.opennms.devjam2022.apiserver.service.IUserService;
 import org.opennms.devjam2022.apiserver.model.UserRole;
 import org.opennms.devjam2022.apiserver.model.UserWithRoles;
@@ -21,26 +22,35 @@ public class UserControllerNB {
 
     @Qualifier("InMemoryUserServiceNB")
     @Autowired
-    IUserService userService;
+    InMemoryUserServiceNB userService;
 
-    @GetMapping("/")
+    @GetMapping()
     public Flux<UserWithRoles> all() {
-        return Flux.fromIterable(userService.getUsers());
+        return userService.getUsersReactively();
+    }
+
+    @GetMapping("/{id}")
+    public Mono<UserWithRoles> getUserByID(@PathVariable String id) {
+        // For the singe user, we can use the blocking version, there should be no performance gain
+        return Mono.fromCallable(() -> userService.getUserByID(id));
+
     }
 
     @GetMapping("/{userIdentity}/roles")
     public Flux<UserRole> allRoles(@PathVariable String userIdentity) {
-        return Flux.fromIterable(userService.getRoles(userIdentity));
+        return userService.getRolesReactively(userIdentity);
     }
 
-    @PostMapping("/add")
+    @PostMapping()
     public Mono<String> addUser(@RequestBody UserWithRoles user) {
-        return Mono.just(userService.addUser(user));
+        // For the singe user, we can use the blocking version, there should be no performance gain
+        return Mono.fromCallable(() -> userService.addUser(user));
     }
 
     @PostMapping("/{userIdentity}/addRole")
     public Mono<String> addRole(@PathVariable String userIdentity, @RequestBody UserRole role) {
-        return Mono.just(userService.addRole(userIdentity, role));
+        // For the singe user, we can use the blocking version, there should be no performance gain
+        return Mono.fromCallable(() -> userService.addRole(userIdentity, role));
     }
 
     @DeleteMapping("/{userIdentity}/deleteRole/{roleId}")

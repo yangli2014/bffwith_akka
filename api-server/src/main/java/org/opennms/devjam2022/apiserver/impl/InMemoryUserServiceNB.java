@@ -1,23 +1,25 @@
 package org.opennms.devjam2022.apiserver.impl;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import org.opennms.devjam2022.apiserver.model.UserRole;
 import org.opennms.devjam2022.apiserver.model.UserWithRoles;
-import org.opennms.devjam2022.apiserver.model.utils.ModelUtil;
 import org.opennms.devjam2022.apiserver.service.AbstractInMemoryUserService;
 import org.opennms.devjam2022.apiserver.service.IUserService;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 /**
- * Simple in-memory implementation of the {@link IUserService} interface.
+ * In memory implementation of the {@link IUserService} interface. Tries to use the idea of
+ * "reactive" spring-boot to make the implementation more efficient. Basically there are only two methods
+ * which make sense to be non-blocking: {@link #getUsersReactively()} and {@link #getRolesReactively(String)}
+ * The other ones can be just made from the "usual" calls
  */
 @Component("InMemoryUserServiceNB")
 public class InMemoryUserServiceNB extends AbstractInMemoryUserService {
 
-    @Override
-    public List<UserWithRoles> getUsers() {
-        return USERS.stream().map(user -> {
+    public Flux<UserWithRoles> getUsersReactively() {
+        // Let's parallelize the work with long streams here and see how it works out
+        return Flux.fromStream(USERS.stream().parallel().map(user -> {
             final List<UserRole> roles = getRoles(user.getIdentity());
             return new UserWithRoles(
                     user.getEmail(),
@@ -25,59 +27,11 @@ public class InMemoryUserServiceNB extends AbstractInMemoryUserService {
                     user.getGivenName(),
                     user.getFamilyName(),
                     roles);
-        }).collect(Collectors.toList());
+        }));
     }
 
-    @Override
-    public UserWithRoles getUserByID(String id) {
-        UserWithRoles user = USERS.stream().filter(u -> u.getIdentity().equals(id)).findFirst().orElse(null);
-        if(user != null) {
-            user.setRoles(getRoles(id));
-        }
-        return user;
-    }
-
-
-    @Override
-    public List<UserRole> getRoles(String userIdentity) {
+    public Flux<UserRole> getRolesReactively(String userIdentity) {
         List<UserRole> result = USER_ROLES.get(userIdentity);
-        return result == null ? Collections.emptyList() : result;
-    }
-
-    @Override
-    public String addUser(UserWithRoles user) {
-        user.setIdentity(ModelUtil.generateId());
-        USERS.add(user);
-
-        return user.getIdentity();
-    }
-
-    @Override
-    public String addRole(String userIdentity, UserRole role) {
-        role.setId(ModelUtil.generateId());
-
-        if (!USER_ROLES.containsKey(userIdentity)) {
-            USER_ROLES.put(userIdentity, new LinkedList<>());
-        }
-
-        USER_ROLES.get(userIdentity).add(role);
-        return role.getId();
-    }
-
-    @Override
-    public boolean deleteRole(String userIdentity, String roleId) {
-        if (USER_ROLES.containsKey(userIdentity)) {
-            List<UserRole> roles = USER_ROLES.get(userIdentity);
-            return roles.removeIf(role -> role.getId().equals(roleId));
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public boolean deleteUser(String userIdentity) {
-        boolean userWasRemoved = USERS.removeIf(user -> user.getIdentity().equals(userIdentity));
-        USER_ROLES.remove(userIdentity);
-        return userWasRemoved;
+        return result == null ? Flux.empty() : Flux.fromStream(result.stream().parallel());
     }
 }
