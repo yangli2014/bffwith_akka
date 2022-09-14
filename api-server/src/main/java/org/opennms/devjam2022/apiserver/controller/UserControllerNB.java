@@ -11,27 +11,21 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * This is the first (hence the "v1") implementation of the api-server for BFF tests
- * this one will be using "blocking" calls to the underlying service simulating a
- * "legacy" api-server which is not "adapted" to the new BFF architecture/concept
+ * Second version (hence the "v2") implementation of the api-server for BFF tests
+ * Will try to follow the "best practices" for a "reactive" spring-boot application
+ * using non-blocking service of "flux" and "mono" types
  */
 @RestController
-@RequestMapping("/v1/users")
-public class UserController {
+@RequestMapping("/v2/users")
+public class UserControllerNB {
 
-    @Qualifier("InMemoryUserService")
+    @Qualifier("InMemoryUserServiceNB")
     @Autowired
     IUserService userService;
 
     @GetMapping("/")
     public Flux<UserWithRoles> all() {
         return Flux.fromIterable(userService.getUsers());
-    }
-
-    @GetMapping("/{id}")
-    public Mono<UserWithRoles> getUserByID(@PathVariable String id) {
-        return Mono.just(userService.getUserByID(id));
-
     }
 
     @GetMapping("/{userIdentity}/roles")

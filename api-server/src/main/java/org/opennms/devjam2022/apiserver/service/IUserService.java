@@ -1,4 +1,4 @@
-package org.opennms.devjam2022.apiserver.impl;
+package org.opennms.devjam2022.apiserver.service;
 
 import java.util.List;
 import org.opennms.devjam2022.apiserver.model.UserRole;

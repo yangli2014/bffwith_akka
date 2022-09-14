@@ -1,12 +1,12 @@
 package org.opennms.devjam2022.apiserver.controller;
 
-import java.util.ArrayList;
 import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 import org.opennms.devjam2022.apiserver.model.UserRole;
 import org.opennms.devjam2022.apiserver.model.UserWithRoles;
-import org.opennms.devjam2022.apiserver.model.utils.ModelUtil;
+import static org.opennms.devjam2022.apiserver.model.utils.ModelUtil.createTestRole;
+import static org.opennms.devjam2022.apiserver.model.utils.ModelUtil.createTestUserWithEmptyListRoles;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -25,7 +25,7 @@ public class UserControllerTest {
 
     @Test
     public void testAddUser() {
-        UserWithRoles user = getUserWithRoles();
+        UserWithRoles user = createTestUserWithEmptyListRoles();
 
         String userId = userController.addUser(user).block();
         assertThat(userId).isNotNull();
@@ -43,17 +43,17 @@ public class UserControllerTest {
 
     @Test
     public void testAddRole() {
-        UserWithRoles user = getUserWithRoles();
+        UserWithRoles user = createTestUserWithEmptyListRoles();
 
         String userId = userController.addUser(user).block();
         assertThat(userId).isNotNull();
 
-        UserRole role = getTestRole();
-        String roleId = userController.addRole(userId.toString(), role).block();
+        UserRole role = createTestRole();
+        String roleId = userController.addRole(userId, role).block();
         assertThat(roleId).isNotNull();
 
         // See that we can see the roles now
-        List<UserRole> roles = userController.allRoles(userId.toString()).collectList().block();
+        List<UserRole> roles = userController.allRoles(userId).collectList().block();
         assertThat(roles).isNotNull();
         roles.stream().filter(r -> r.getId().equals(roleId)).findFirst().ifPresentOrElse(r -> {
             assertThat(r.getRole()).isEqualTo(role.getRole());
@@ -83,7 +83,7 @@ public class UserControllerTest {
 
     @Test
     public void testDeleteUser() {
-        UserWithRoles user = getUserWithRoles();
+        UserWithRoles user = createTestUserWithEmptyListRoles();
         long userCount = userController.all().collectList().block().size();
 
         String userId = userController.addUser(user).block();
@@ -91,21 +91,21 @@ public class UserControllerTest {
 
         assertThat(userController.all().collectList().block().size()).isEqualTo(userCount + 1);
 
-        userController.deleteUser(userId.toString());
+        userController.deleteUser(userId);
 
         assertThat(userController.all().collectList().block().size()).isEqualTo(userCount);
     }
 
     @Test
     public void testDeleteRole() {
-        UserWithRoles user = getUserWithRoles();
+        UserWithRoles user = createTestUserWithEmptyListRoles();
 
         String userId = userController.addUser(user).block();
         assertThat(userId).isNotNull();
 
         assertThat(userController.all().collectList().block()).isNotEmpty();
 
-        UserRole role = getTestRole();
+        UserRole role = createTestRole();
         long roleCount = userController.allRoles(userId).collectList().block().size();
         String roleId = userController.addRole(userId, role).block();
 
@@ -114,20 +114,5 @@ public class UserControllerTest {
         userController.deleteRole(userId, roleId);
 
         assertThat(userController.allRoles(userId).collectList().block().size()).isEqualTo(roleCount);
-    }
-
-    private static UserRole getTestRole() {
-        return new UserRole(
-                ModelUtil.generateId(),
-                "TestRole");
-    }
-
-    private static UserWithRoles getUserWithRoles() {
-        return new UserWithRoles(
-                "tst@opennms.com",
-                ModelUtil.generateId(),
-                "TestName",
-                "TestFamily",
-                new ArrayList<>());
     }
 }

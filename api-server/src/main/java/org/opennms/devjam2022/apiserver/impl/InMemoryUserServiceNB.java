@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 /**
  * Simple in-memory implementation of the {@link IUserService} interface.
  */
-@Component("InMemoryUserService")
-public class InMemoryUserService extends AbstractInMemoryUserService {
+@Component("InMemoryUserServiceNB")
+public class InMemoryUserServiceNB extends AbstractInMemoryUserService {
 
     @Override
     public List<UserWithRoles> getUsers() {
