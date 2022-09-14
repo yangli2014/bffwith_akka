@@ -28,17 +28,47 @@
 
 package org.opennms.devjam2022.bff.service;
 
+import java.util.concurrent.CompletionStage;
+
+import akka.http.javadsl.Http;
+import akka.http.javadsl.model.HttpRequest;
+import akka.http.javadsl.model.HttpResponse;
+import akka.http.javadsl.model.RequestEntity;
+
 public class UserService {
+  private static final String BASE_SERVER_URL_USERS = "http://localhost:8080/v1/users";
 
-  public String listUsers(){
-    return null;
+  private final Http httpClient;
+
+  public UserService(Http httpClient) {
+    this.httpClient = httpClient;
   }
 
-  public String getUserByID(long id) {
-    return null;
+  public CompletionStage<HttpResponse> listUsers(){
+    return get(BASE_SERVER_URL_USERS);
   }
 
-  public Long createUser(String userData) {
-    return null;
+  public CompletionStage<HttpResponse> getUserByID(String id) {
+    return get(BASE_SERVER_URL_USERS + "/" + id);
+  }
+
+  public CompletionStage<HttpResponse> createUser(RequestEntity userData) {
+    return post(BASE_SERVER_URL_USERS, userData);
+  }
+
+  public CompletionStage<HttpResponse> deleteUser(long id) {
+    return delete(BASE_SERVER_URL_USERS + "/" + id + "/delete");
+  }
+
+  private CompletionStage<HttpResponse> get(String url) {
+    return httpClient.singleRequest(HttpRequest.GET(url));
+  }
+
+  private CompletionStage<HttpResponse> post(String url, RequestEntity data) {
+    return httpClient.singleRequest(HttpRequest.POST(url).withEntity(data));
+  }
+
+  private CompletionStage<HttpResponse> delete(String url) {
+    return httpClient.singleRequest(HttpRequest.DELETE(url));
   }
 }
