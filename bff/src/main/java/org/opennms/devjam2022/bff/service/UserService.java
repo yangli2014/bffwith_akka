@@ -39,14 +39,16 @@ public class UserService {
 
   public static final int DEFAULT_PORT = 8081;
   private static final String BASE_SERVER_URL_USERS_P1 = "http://localhost:";
-  private static final String BASE_SERVER_URL_USERS_P2 = "/v1/users";
+  private static final String BASE_SERVER_URL_USERS_P2 = "/users";
 
   private final Http httpClient;
   private final int port;
+  private final int apiVersion;
 
-  public UserService(Http httpClient, int port) {
+  public UserService(Http httpClient, int port, int apiVersion) {
     this.httpClient = httpClient;
     this.port = port;
+    this.apiVersion = apiVersion;
   }
 
   public CompletionStage<HttpResponse> listUsers(){
@@ -78,6 +80,6 @@ public class UserService {
   }
 
   private String getBaseServerUrlUsers() {
-    return BASE_SERVER_URL_USERS_P1 + port + BASE_SERVER_URL_USERS_P2;
+    return BASE_SERVER_URL_USERS_P1 + port + "/v" + apiVersion + BASE_SERVER_URL_USERS_P2;
   }
 }
