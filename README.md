@@ -6,16 +6,7 @@ This is a demo project for DevJam 2022 to evaluate the Akka HTTP technology.
 
 ## Tasks:
 
-- Implement a simple REST API server with spring boot
-  - Support basic CURD operation on sample data model. For example, User and Address 
-- Create a web server with Akka HTTP
-  - Accept HTTP requests with AKK HTTP server
-  - Delegate the HTTP requests to REST API server and send back the result to client
-- Basic performance test:
-  - How many request can handle per seconds
-- Optional
-  - Compare to another BFF technology: Spring boot web with Apache HTTP client or Spring web client.
-  - Can support GraphQl?
+- See GitHub issues for done and outstanding tasks
 
 ## References
 
