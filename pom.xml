@@ -17,6 +17,7 @@
     <modules>
         <module>api-server</module>
         <module>bff</module>
+        <module>bff_webclient</module>
     </modules>
 
 </project>
