@@ -1,4 +1,4 @@
-package org.opennms.devjam2022.bff.loadtest;
+package loadtest;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -15,4 +15,9 @@ public class BFFLoadTestData {
     private long bffCallV1byteTransfer;
     private long bffCallV2;
     private long bffCallV2byteTransfer;
+
+    private long bffWebClientCallV1;
+    private long bffWebClientCallV1byteTransfer;
+    private long bffWebClientCallV2;
+    private long bffWebClientCallV2byteTransfer;
 }
