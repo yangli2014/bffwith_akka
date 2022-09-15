@@ -51,6 +51,7 @@ public class BFFApplication extends AllDirectives {
   private final UserService service;
 
   private final static int BFF_DEFAULT_PORT = 8081;
+    private final static int BFF_DEFAULT_API_VERSION = 1;
   private final static String BFF_DEFAULT_HOST = "localhost";
 
   private BFFApplication(UserService service) {
@@ -59,6 +60,8 @@ public class BFFApplication extends AllDirectives {
 
   public static void main(String[] args) throws IOException {
       int port = DEFAULT_PORT;
+      int version = BFF_DEFAULT_API_VERSION;
+      int bffPort = BFF_DEFAULT_PORT;
       try {
           if (args.length > 0 && Integer.parseInt(args[0]) > 0) {
               port = Integer.parseInt(args[0]);
@@ -66,22 +69,36 @@ public class BFFApplication extends AllDirectives {
           } else {
               System.out.println("Default port '" + port + "' will be used...");
           }
+
+          if (args.length > 1 && Integer.parseInt(args[1]) > 0) {
+              version = Integer.parseInt(args[1]);
+              System.out.println("Found version '" + version + "'. It will be used in actor system...");
+          } else {
+              System.out.println("Default version '" + version + "' will be used...");
+          }
+
+          if (args.length > 2 && Integer.parseInt(args[2]) > 0) {
+              bffPort = Integer.parseInt(args[2]);
+              System.out.println("Found BFF port '" + bffPort + "'. It will be used in actor system...");
+          } else {
+              System.out.println("Default BFF port '" + bffPort + "' will be used...");
+          }
       } catch (Exception e) {
-          System.out.println("Default port '" + port + "' will be used...");
+          System.out.println("WARN: DEFAULT variables will be used...");
       }
 
       ActorSystem<Void> actorSystem = ActorSystem.create(Behaviors.empty(), "bff-actor-system");
 
       final Http http = Http.get(actorSystem);
 
-      UserService userService = new UserService(http, port);
+      UserService userService = new UserService(http, port, version);
 
       BFFApplication app = new BFFApplication(userService);
 
-      final CompletionStage<ServerBinding> binding = http.newServerAt(BFF_DEFAULT_HOST, BFF_DEFAULT_PORT)
+      final CompletionStage<ServerBinding> binding = http.newServerAt(BFF_DEFAULT_HOST, bffPort)
               .bind(app.createRoute());
 
-      System.out.println("Server online at http://" + BFF_DEFAULT_HOST + ":" + BFF_DEFAULT_PORT + "/\nPress RETURN to stop...");
+      System.out.println("Server online at http://" + BFF_DEFAULT_HOST + ":" + bffPort + "/\nPress RETURN to stop...");
       System.in.read();
 
       binding.thenCompose(ServerBinding::unbind).thenAccept(unbound -> actorSystem.terminate());
