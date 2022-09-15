@@ -2,7 +2,8 @@
 This is a demo project for DevJam 2022 to evaluate the Akka HTTP technology. 
 
 ## The basic idea of this project
-<img width="307" alt="Screen Shot 2022-09-12 at 12 57 08 PM" src="https://user-images.githubusercontent.com/9009178/189712726-3e1d8ff3-533f-4654-ab0a-e07d9266e759.png">
+![Screen Shot 2022-09-15 at 4 26 11 PM](https://user-images.githubusercontent.com/9009178/190502853-3bc928cb-95c6-42b1-b721-eebb495059d8.png)
+
 
 ## Tasks:
 
