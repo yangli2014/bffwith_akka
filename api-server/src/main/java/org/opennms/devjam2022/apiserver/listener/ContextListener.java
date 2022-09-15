@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 public class ContextListener {
     private final static Logger LOG = org.slf4j.LoggerFactory.getLogger(ContextListener.class);
 
-    public static final int NUMBER_OF_USERS_IN_DB = 1000;
+    public static final int NUMBER_OF_USERS_IN_DB = 500000;
 
     @Qualifier("InMemoryUserService")
     @Autowired

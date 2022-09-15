@@ -45,32 +45,46 @@ import akka.http.javadsl.ServerBinding;
 import akka.http.javadsl.model.HttpResponse;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
+import static org.opennms.devjam2022.bff.service.UserService.DEFAULT_PORT;
 
 public class BFFApplication extends AllDirectives {
   private final UserService service;
+
+  private final static int BFF_DEFAULT_PORT = 8081;
+  private final static String BFF_DEFAULT_HOST = "localhost";
 
   private BFFApplication(UserService service) {
     this.service = service;
   }
 
   public static void main(String[] args) throws IOException {
-    ActorSystem<Void> actorSystem = ActorSystem.create(Behaviors.empty(), "bff-actor-system");
+      int port = DEFAULT_PORT;
+      try {
+          if (args.length > 0 && Integer.parseInt(args[0]) > 0) {
+              port = Integer.parseInt(args[0]);
+              System.out.println("Found port '" + port + "'. It will be used in actor system...");
+          } else {
+              System.out.println("Default port '" + port + "' will be used...");
+          }
+      } catch (Exception e) {
+          System.out.println("Default port '" + port + "' will be used...");
+      }
 
-    final Http http = Http.get(actorSystem);
+      ActorSystem<Void> actorSystem = ActorSystem.create(Behaviors.empty(), "bff-actor-system");
 
-    UserService userService = new UserService(http);
+      final Http http = Http.get(actorSystem);
 
-    BFFApplication app = new BFFApplication(userService);
+      UserService userService = new UserService(http, port);
 
-    final CompletionStage<ServerBinding> binding = http.newServerAt("localhost", 8081)
-        .bind(app.createRoute());
+      BFFApplication app = new BFFApplication(userService);
 
-    System.out.println("Server online at http://localhost:8081/\nPress RETURN to stop...");
-    System.in.read();
+      final CompletionStage<ServerBinding> binding = http.newServerAt(BFF_DEFAULT_HOST, BFF_DEFAULT_PORT)
+              .bind(app.createRoute());
 
-    binding.thenCompose(ServerBinding::unbind)
-        .thenAccept(unbound -> actorSystem.terminate());
+      System.out.println("Server online at http://" + BFF_DEFAULT_HOST + ":" + BFF_DEFAULT_PORT + "/\nPress RETURN to stop...");
+      System.in.read();
 
+      binding.thenCompose(ServerBinding::unbind).thenAccept(unbound -> actorSystem.terminate());
   }
 
   private CompletionStage<Optional<String>> listUsers() {
