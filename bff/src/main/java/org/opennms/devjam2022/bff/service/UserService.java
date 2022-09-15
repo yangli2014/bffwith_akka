@@ -36,28 +36,33 @@ import akka.http.javadsl.model.HttpResponse;
 import akka.http.javadsl.model.RequestEntity;
 
 public class UserService {
-  private static final String BASE_SERVER_URL_USERS = "http://localhost:8080/v1/users";
+
+  public static final int DEFAULT_PORT = 8081;
+  private static final String BASE_SERVER_URL_USERS_P1 = "http://localhost:";
+  private static final String BASE_SERVER_URL_USERS_P2 = "/v1/users";
 
   private final Http httpClient;
+  private final int port;
 
-  public UserService(Http httpClient) {
+  public UserService(Http httpClient, int port) {
     this.httpClient = httpClient;
+    this.port = port;
   }
 
   public CompletionStage<HttpResponse> listUsers(){
-    return get(BASE_SERVER_URL_USERS);
+    return get(getBaseServerUrlUsers());
   }
 
   public CompletionStage<HttpResponse> getUserByID(String id) {
-    return get(BASE_SERVER_URL_USERS + "/" + id);
+    return get(getBaseServerUrlUsers() + "/" + id);
   }
 
   public CompletionStage<HttpResponse> createUser(RequestEntity userData) {
-    return post(BASE_SERVER_URL_USERS, userData);
+    return post(getBaseServerUrlUsers(), userData);
   }
 
   public CompletionStage<HttpResponse> deleteUser(long id) {
-    return delete(BASE_SERVER_URL_USERS + "/" + id + "/delete");
+    return delete(getBaseServerUrlUsers() + "/" + id + "/delete");
   }
 
   private CompletionStage<HttpResponse> get(String url) {
@@ -70,5 +75,9 @@ public class UserService {
 
   private CompletionStage<HttpResponse> delete(String url) {
     return httpClient.singleRequest(HttpRequest.DELETE(url));
+  }
+
+  private String getBaseServerUrlUsers() {
+    return BASE_SERVER_URL_USERS_P1 + port + BASE_SERVER_URL_USERS_P2;
   }
 }
