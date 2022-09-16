@@ -25,7 +25,7 @@ public abstract class AbstractInMemoryUserService implements IUserService {
     }
 
     @Override
-    public UserWithRoles getUserByID(String id) {
+    public synchronized UserWithRoles getUserByID(String id) {
         UserWithRoles user = USERS.stream().filter(u -> u.getIdentity().equals(id)).findFirst().orElse(null);
         if(user != null) {
             user.setRoles(getRoles(id));
@@ -33,7 +33,7 @@ public abstract class AbstractInMemoryUserService implements IUserService {
         return user;
     }
 
-    public String addUser(UserWithRoles user) {
+    public synchronized String addUser(UserWithRoles user) {
         user.setIdentity(ModelUtil.generateId());
         USERS.add(user);
 
@@ -63,7 +63,7 @@ public abstract class AbstractInMemoryUserService implements IUserService {
     }
 
     @Override
-    public boolean deleteUser(String userIdentity) {
+    public synchronized boolean deleteUser(String userIdentity) {
         boolean userWasRemoved = USERS.removeIf(user -> user.getIdentity().equals(userIdentity));
         USER_ROLES.remove(userIdentity);
         return userWasRemoved;

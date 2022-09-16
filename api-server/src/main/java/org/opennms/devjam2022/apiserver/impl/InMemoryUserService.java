@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 public class InMemoryUserService extends AbstractInMemoryUserService {
 
     @Override
-    public List<UserWithRoles> getUsers() {
+    public synchronized List<UserWithRoles> getUsers() {
         return USERS.stream().map(user -> {
             final List<UserRole> roles = getRoles(user.getIdentity());
             return new UserWithRoles(
